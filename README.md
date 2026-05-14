@@ -1,3 +1,5 @@
+[開発メモ](/NOTE.md)
+
 # BLE-APRS
 
 # ⚠ Under development / 開発中 ⚠
