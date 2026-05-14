@@ -1,0 +1,20 @@
+cat > .gitignore <<'EOF'
+# ESP-IDF build outputs
+build/
+managed_components/
+
+# ESP-IDF local/backup files
+sdkconfig.old
+sdkconfig.*.old
+
+# Editor/OS files
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Python cache
+__pycache__/
+*.pyc
+EOF
