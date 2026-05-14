@@ -39,6 +39,17 @@ $APRS,1,60,A>AX.25...
   * 同一 nonce は無視
 
 ---
+<div style="display: flex; gap: 10px;">
+<img src="img/IMG20260513052047.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+<img src="img/IMG20260514041604.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+<img src="img/IMG20260514033056.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+<br>
+<img src="img/IMG20260514035851~2.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+<img src="img/Screenshot_2026-05-14-03-58-32-43_af59aea95772e29c447d999934d7e06f.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+<img src="img/Screenshot_20260514-052509.jpg" style="width: 32%; height: 300px; object-fit: contain; background: #f0f0f0;">
+</div>
+
+---
 
 # 現在の動作
 
