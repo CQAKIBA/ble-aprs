@@ -30,7 +30,8 @@ C3/C6のアプリケーションソースは同一内容です。`sdkconfig`と�
 - GPS/NMEAによるAPRSトラッカー
 - BME280温度・湿度・気圧
 - Adaptive Relay Interval、nonce重複抑制、token bucket
-- NOFIX初期遅延、GPS/FIX状態表示
+- GPSを測位できない場合、一定時間後から`NOFIX`を生存信号として送信
+- GPS測位後に欠測が続いた場合、最終測位からの経過時間を生存信号として送信
 - GPS・Radio・USB状態表示用PL9823 LED
 
 BLE payload形式：
