@@ -1,256 +1,87 @@
-[開発メモ](/NOTE.md)
+[開発メモ](NOTE.md)
 
 # BLE-APRS
 
-# ⚠ Under development / 開発中 ⚠
+> **Under development / 開発中**
 
-このプロジェクトは実験的実装です。
-仕様・パケット形式・動作・API・ビルド手順などは今後大きく変更される可能性があります。
+BLE Extended Advertising（LE Coded PHY）を利用し、APRS / AX.25フレームを非接続型ブロードキャストで送受信する実験プロジェクトです。USB Serial/JTAGによるKISS TNC入出力、GPS/NMEAトラッカー、BME280気象情報、受信中継機能を実装しています。
 
-現在は ESP32-C3 + ESP-IDF を使用した BLE Extended Advertising ベースの APRS 実験を目的としています。
+現在は次の2ボードを対象にしています。
 
----
+- Seeed Studio XIAO ESP32-C3
+- Seeed Studio XIAO ESP32-C6
 
-# 概要
+## ディレクトリ
 
-BLE Extended Advertising (LE Coded PHY) を利用して、APRS / AX.25 フレームを非接続型ブロードキャストで中継する実験プロジェクトです。
+```text
+32c3/  XIAO ESP32-C3用ESP-IDFプロジェクトとsdkconfig
+32c6/  XIAO ESP32-C6用ESP-IDFプロジェクトとsdkconfig
+img/   説明用画像
+```
 
-現在の実装では、KISS TNC 互換インターフェースを通じて APRSdroid 等と接続できます。
+C3/C6のアプリケーションソースは同一内容です。`sdkconfig`とビルドキャッシュを別々に持つため、ターゲットを切り替えずにビルドできます。
 
-BLE payload 形式:
+## 主な機能
+
+- BLE 5 Extended Advertising / Extended Scan
+- LE Coded PHY
+- BLE-APRS送受信
+- USB Serial/JTAG KISS TNC
+- GPS/NMEAによるAPRSトラッカー
+- BME280温度・湿度・気圧
+- Adaptive Relay Interval、nonce重複抑制、token bucket
+- NOFIX初期遅延、GPS/FIX状態表示
+- GPS・Radio・USB状態表示用PL9823 LED
+
+BLE payload形式：
 
 ```text
 $APRS,1,<relay_interval>,<nonce>>AX.25_FRAME
 ```
 
-例:
+## 配線
 
-```text
-$APRS,1,60,A>AX.25...
-```
+| 機能 | XIAO ESP32-C3 | XIAO ESP32-C6 |
+|---|---:|---:|
+| GPS RX (D7) | GPIO20 | GPIO17 |
+| BME280 SDA (D4) | GPIO6 | GPIO22 |
+| BME280 SCL (D5) | GPIO7 | GPIO23 |
+| PL9823 | GPIO10 | GPIO18 (D10) |
 
-* `relay_interval`
+ESP32-C6では基板上のRFアンテナスイッチも初期化します。外部U.FL／内蔵アンテナはソースの `XIAO_C6_USE_EXTERNAL_ANTENNA` で選択します。
 
-  * 中継要求間隔 (秒)
-  * `0` は immediate relay request
-* `nonce`
+## ビルド環境
 
-  * 重複抑制用
-  * 同一 nonce は無視
+- ESP-IDF v5.4系
+- `espressif/led_strip` 3.0.3
 
----
-<div style="display: flex; gap: 10px;">
-<img src="img/IMG20260513052047.jpg" height="120px">
-<img src="img/IMG20260514041604.jpg" height="120px">
-<img src="img/IMG20260514033056.jpg" height="120px">
-<img src="img/IMG20260514035851~2.jpg" height="120px">
-<img src="img/Screenshot_2026-05-14-03-58-32-43_af59aea95772e29c447d999934d7e06f.jpg" height="120px">
-<img src="img/Screenshot_20260514-052509.jpg" height="120px">
-</div>
-
----
-
-# 現在の動作
-
-* BLE 5 Extended Advertising
-* LE Coded PHY
-* KISS TNC input/output
-* USB Serial/JTAG 対応
-* APRS message packet の immediate relay
-* relay_interval ベースのレート制御
-* nonce ベースの重複抑制
-* token bucket + temporary BAN によるフェイルセーフ
-
----
-
-# NeoPixel LED
-
-XIAO ESP32C3 D10 (GPIO10) の NeoPixel を使用。
-
-| 色 | 動作                            |
-| - | ----------------------------- |
-| 赤 | BLE advertising               |
-| 緑 | KISS frame received           |
-| 青 | BLE-APRS received and relayed |
-
----
-
-# 動作環境
-
-現在確認している環境:
-
-* XIAO ESP32C3
-* ESP-IDF v5.4 系
-
----
-
-# ビルド手順
-
-## ESP-IDF 環境準備
-
-ESP-IDF をセットアップしてください。
+リポジトリを取得し、ESP-IDF環境を有効化してから対象ディレクトリでビルドします。
 
 ```bash
-. $HOME/esp/esp-idf/export.sh
-```
-
----
-
-## clone
-
-```bash
-git clone https://github.com/YOURNAME/ble-aprs.git
+git clone https://github.com/CQAKIBA/ble-aprs.git
 cd ble-aprs
 ```
 
----
-
-## menuconfig
+### XIAO ESP32-C3
 
 ```bash
-idf.py menuconfig
-```
-
-主な設定:
-
-* Bluetooth:
-
-  * Bluedroid
-  * BLE 5.0 enabled
-  * Extended Advertising enabled
-* Controller:
-
-  * BLE Scan Duplicate disabled
-  * TX Power
-* USB Serial/JTAG enabled
-
----
-
-## reconfigure
-
-依存関係更新:
-
-```bash
-idf.py reconfigure
-```
-
----
-
-## build
-
-```bash
+cd 32c3
 idf.py build
-```
-
----
-
-## flash
-
-```bash
-idf.py flash
-```
-
-または:
-
-```bash
 idf.py -p /dev/ttyACM0 flash
+idf.py -p /dev/ttyACM0 monitor
 ```
 
----
-
-## monitor
+### XIAO ESP32-C6
 
 ```bash
-idf.py monitor
-```
-
----
-
-# WebSerial ESPTool を使う場合
-
-ESP-IDF は複数 bin を書き込む必要があります。
-
-通常は以下を使用:
-
-```text
-0x0000   build/bootloader/bootloader.bin
-0x8000   build/partition_table/partition-table.bin
-0x10000  build/ble-aprs.bin
-```
-
-または merge_bin を使用してください。
-
----
-
-# ビルドトラブル時のクリーンアップ
-
-## build ディレクトリ削除
-
-```bash
-rm -rf build
-```
-
----
-
-## managed_components 削除
-
-```bash
-rm -rf managed_components
-```
-
----
-
-## sdkconfig 初期化
-
-```bash
-rm sdkconfig
-idf.py reconfigure
-```
-
----
-
-## 完全クリーン
-
-```bash
-rm -rf build managed_components
-rm sdkconfig
-idf.py reconfigure
+cd 32c6
 idf.py build
+idf.py -p /dev/ttyACM0 flash
+idf.py -p /dev/ttyACM0 monitor
 ```
 
----
+ポート名は環境に合わせて変更してください。初回または設定変更時は、それぞれのディレクトリで `idf.py menuconfig` を実行します。
 
-# 現在の制限
+## 注意
 
-* 実験コード
-* 互換性未保証
-* プロトコル仕様変更の可能性あり
-* BLE airtime 最適化未実装
-* digi/repeater 機能開発中
-
----
-
-# ライセンス
-
-MIT License
-
-Copyright (c) 2026 Daisuke JA1UMW / CQAKIBA.TOKYO
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
+実験中の実装です。仕様、パケット形式、動作、配線、ビルド設定は今後変更される可能性があります。無線運用時は使用地域の法令・規則を確認してください。
